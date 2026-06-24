@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareerAI — Your Intelligent Job Assistant</title>
+  <meta name="description" content="CareerAI is an AI-powered job assistant that helps you with resume writing, interview prep, salary negotiation, and career advice using open-source AI models." />
+  <meta name="keywords" content="AI job assistant, career advice, resume writing, interview preparation, salary negotiation, career growth" />
+  <meta name="author" content="CareerAI" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="CareerAI — Your Intelligent Job Assistant" />
+  <meta property="og:description" content="AI-powered career guidance using open-source models. Resume, interviews, salary & more." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- API Key Modal -->
+<div class="modal-overlay hidden" id="api-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🔑 Connect AI Model</h3>
+      <button class="modal-close" id="modal-close-btn" aria-label="Close modal">✕</button>
+    </div>
+
+    <div class="info-box">
+      <strong>Free Open-Source AI:</strong> Connect a free HuggingFace token to enable full AI responses using Mistral-7B or Zephyr-7B — 100% open-source models.
+    </div>
+
+    <p class="modal-desc">
+      Get your free token at 
+      <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">huggingface.co/settings/tokens</a>.
+      Without a token, the assistant uses a built-in intelligent response engine.
+    </p>
+
+    <div class="modal-input-group">
+      <label for="hf-token-input">HuggingFace API Token</label>
+      <input 
+        type="password" 
+        id="hf-token-input" 
+        placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx"
+        aria-label="HuggingFace API token"
+      />
+    </div>
+
+    <div class="modal-input-group">
+      <label for="model-select">Open-Source Model</label>
+      <select id="model-select" aria-label="Select AI model">
+        <option value="mistralai/Mistral-7B-Instruct-v0.2">Mistral-7B-Instruct-v0.2 (Recommended)</option>
+        <option value="HuggingFaceH4/zephyr-7b-beta">Zephyr-7B-Beta</option>
+        <option value="meta-llama/Llama-3.2-3B-Instruct">Llama 3.2 3B Instruct</option>
+        <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 Mini 4K Instruct</option>
+      </select>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-secondary" id="use-fallback-btn">Use Built-in Engine</button>
+      <button class="btn-primary" id="save-token-btn">Save &amp; Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast hidden" id="toast" role="alert" aria-live="polite"></div>
+
+<!-- App -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" role="complementary" aria-label="Navigation">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🤖</div>
+      <div class="logo-text">
+        <h2>CareerAI</h2>
+        <span>Job Assistant v1.0</span>
+      </div>
+    </div>
+
+    <p class="sidebar-section-title">Job Topics</p>
+
+    <button class="sidebar-btn active" id="btn-all" data-topic="all">
+      <span class="icon">💬</span> All Topics
+    </button>
+    <button class="sidebar-btn" id="btn-resume" data-topic="resume">
+      <span class="icon">📄</span> Resume Writing
+    </button>
+    <button class="sidebar-btn" id="btn-interview" data-topic="interview">
+      <span class="icon">🎯</span> Interview Prep
+    </button>
+    <button class="sidebar-btn" id="btn-salary" data-topic="salary">
+      <span class="icon">💰</span> Salary Negotiation
+    </button>
+    <button class="sidebar-btn" id="btn-career" data-topic="career">
+      <span class="icon">🚀</span> Career Growth
+    </button>
+    <button class="sidebar-btn" id="btn-linkedin" data-topic="linkedin">
+      <span class="icon">🔗</span> LinkedIn Tips
+    </button>
+    <button class="sidebar-btn" id="btn-cover" data-topic="cover">
+      <span class="icon">✉️</span> Cover Letters
+    </button>
+    <button class="sidebar-btn" id="btn-switch" data-topic="switch">
+      <span class="icon">🔄</span> Career Switch
+    </button>
+
+    <div class="sidebar-divider"></div>
+
+    <p class="sidebar-section-title">Actions</p>
+
+    <button class="sidebar-btn" id="clear-chat-btn">
+      <span class="icon">🗑️</span> Clear Chat
+    </button>
+    <button class="sidebar-btn" id="open-api-btn">
+      <span class="icon">⚡</span> Connect AI Model
+    </button>
+    <button class="sidebar-btn" id="export-chat-btn">
+      <span class="icon">💾</span> Export Chat
+    </button>
+
+    <!-- Model Status -->
+    <div class="model-badge">
+      <div class="badge-label">Active Model</div>
+      <div class="badge-name" id="model-badge-name">Built-in Engine</div>
+      <div class="model-status">
+        <div class="status-dot"></div>
+        <span class="status-text" id="model-status-text">Ready</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Chat Area -->
+  <main class="main" role="main">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="ai-avatar" aria-hidden="true">🤖</div>
+        <div class="header-info">
+          <h3>CareerAI Assistant</h3>
+          <p id="header-status">Powered by open-source AI • Ready to help</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="header-clear-btn" title="Clear chat" aria-label="Clear chat">🗑️</button>
+        <button class="api-key-btn" id="header-api-btn" aria-label="Connect AI model">
+          ⚡ <span id="api-btn-text">Connect AI</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Chat messages">
+      
+      <!-- Welcome Screen -->
+      <div class="welcome-screen" id="welcome-screen">
+        <div class="welcome-icon" aria-hidden="true">🤖</div>
+        <h1>Your AI Job Assistant</h1>
+        <p>
+          Ask me anything about your career — from crafting the perfect resume to 
+          acing interviews, negotiating salaries, or switching careers. I'm here to help!
+        </p>
+
+        <!-- Category Chips -->
+        <div class="category-chips" role="group" aria-label="Quick topic filters">
+          <button class="chip" data-prompt="How do I write a strong resume?" aria-label="Resume tips">📄 Resume</button>
+          <button class="chip" data-prompt="How should I prepare for a job interview?" aria-label="Interview tips">🎯 Interview</button>
+          <button class="chip" data-prompt="How do I negotiate my salary effectively?" aria-label="Salary negotiation">💰 Salary</button>
+          <button class="chip" data-prompt="How can I optimize my LinkedIn profile?" aria-label="LinkedIn tips">🔗 LinkedIn</button>
+          <button class="chip" data-prompt="How do I write a compelling cover letter?" aria-label="Cover letter">✉️ Cover Letter</button>
+          <button class="chip" data-prompt="How do I switch careers successfully?" aria-label="Career switch">🔄 Career Switch</button>
+        </div>
+
+        <!-- Quick Prompts Grid -->
+        <div class="quick-prompts" role="group" aria-label="Quick question prompts">
+          <button class="quick-prompt-card" id="qp-resume" data-prompt="What are the top 5 resume mistakes to avoid?">
+            <span class="qp-icon">📝</span>
+            <div>
+              <div class="qp-title">Resume Mistakes</div>
+              <div class="qp-sub">Top 5 errors that hurt your job search</div>
+            </div>
+          </button>
+          <button class="quick-prompt-card" id="qp-interview" data-prompt="What are the most common interview questions and how should I answer them?">
+            <span class="qp-icon">🎤</span>
+            <div>
+              <div class="qp-title">Interview Questions</div>
+              <div class="qp-sub">Common questions & winning answers</div>
+            </div>
+          </button>
+          <button class="quick-prompt-card" id="qp-salary" data-prompt="How do I negotiate a higher salary without losing the job offer?">
+            <span class="qp-icon">💵</span>
+            <div>
+              <div class="qp-title">Salary Negotiation</div>
+              <div class="qp-sub">Get paid what you're worth</div>
+            </div>
+          </button>
+          <button class="quick-prompt-card" id="qp-linkedin" data-prompt="How do I make my LinkedIn profile stand out to recruiters?">
+            <span class="qp-icon">🌐</span>
+            <div>
+              <div class="qp-title">LinkedIn Profile</div>
+              <div class="qp-sub">Attract recruiters & opportunities</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- end chat-messages -->
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <div class="input-container" id="input-container">
+        <textarea
+          id="chat-input"
+          placeholder="Ask anything about your career, resume, interviews, salary..."
+          rows="1"
+          aria-label="Type your job-related question"
+          maxlength="1000"
+        ></textarea>
+        <button class="send-btn" id="send-btn" title="Send message" aria-label="Send message" disabled>
+          ➤
+        </button>
+      </div>
+      <div class="input-footer">
+        <span class="input-hint">Press <kbd>Enter</kbd> to send • <kbd>Shift+Enter</kbd> for new line</span>
+        <span class="char-count" id="char-count">0 / 1000</span>
+      </div>
+    </div>
+
+  </main>
+</div><!-- end #app -->
+
+<script src="app.js"></script>
+</body>
+</html>
