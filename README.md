@@ -12,7 +12,7 @@
 **An AI-powered career companion that helps you land your dream job.**  
 *Resume writing • Interview prep • Salary negotiation • Career growth*
 
-[🚀 Live Demo](https://career-ai-virid-six.vercel.app) • [📖 Features](#features) • [⚡ Quick Start](#quick-start) • [🤖 AI Setup](#connecting-open-source-ai)
+[🚀 Live Demo][(https://career-ai-virid-six.vercel.app)](https://career-ai-virid-six.vercel.app/) • [📖 Features](#features) • [⚡ Quick Start](#quick-start) • [🤖 AI Setup](#connecting-open-source-ai)
 
 </div>
 
